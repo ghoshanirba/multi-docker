@@ -1,0 +1,28 @@
+sudo: required
+services:
+  - docker
+  
+before_install:
+  - docker build -t ghoshanirba/react-test -f ./client/Dockerfile.dev ./client
+
+
+#script section is the primary test execution section.  
+script:
+  - docker run -e CI=true ghoshanirba/react-test npm run test
+  
+
+after_success:
+#will use the default Dockefile to build the image hence did not mention dockerfile
+  - docker build -t ghoshanirba/multi-client ./client
+  - docker build -t ghoshanirba/multi-client ./nginx
+  - docker build -t ghoshanirba/multi-client ./server   
+  - docker build -t ghoshanirba/multi-client ./worker  
+  
+# Login to docker CLI, echo "$DOCKER_PASSWORD" will retrieve tha password from Travis Environment Variables and append the password in the docker login command. login -u will pass  the user name and the passworn will be passed via stdin.
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+# Take those images and push them into docker hub
+  - docker push ghoshanirba/multi-client
+  - docker push ghoshanirba/multi-client
+  - docker push ghoshanirba/multi-client
+  - docker push ghoshanirba/multi-client
